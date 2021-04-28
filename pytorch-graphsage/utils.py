@@ -36,6 +36,42 @@ KI_CLASSES = ['inflammatory', 'lymphocyte', 'fibroblast and endothelial',
               'epithelial']
 
 
+class NpEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, np.integer):
+            return int(obj)
+        elif isinstance(obj, np.floating):
+            return float(obj)
+        elif isinstance(obj, np.ndarray):
+            return obj.tolist()
+        else:
+            return super(NpEncoder, self).default(obj)
+
+
+# MINE -----------------------------------------------------
+def export_prediction_as_json(image_name, mode, edges, neg_edges):
+    all_edges = []
+
+    edges_copy = edges.copy()  # .tolist()
+    for i in range(len(edges_copy)):
+        edges_copy[i].append(1)  # crossing edge
+
+    neg_edges_copy = neg_edges.copy()  # .tolist()
+    for i in range(len(neg_edges_copy)):
+        neg_edges_copy[i].append(0)  # close to edge
+
+    all_edges.extend(edges_copy)
+    all_edges.extend(neg_edges_copy)
+    jsonString = json.dumps(all_edges, cls=NpEncoder)
+
+    with open(f"edges_json_test_results/{image_name}_{mode}_edges_result.json", 'w') as f:
+        f.write(str(jsonString))
+
+
+# ----------------------------------------------------------
+
+
+# called from -> utils.visualize_edges(imarray, edge_pred, neg_pred, coords, classes, path[2])
 def visualize_edges(img, edges, neg_edges, coords, classes, path, class_idx_to_name=None, color=BOX_COLOR, thickness=1):
     img2 = img.copy()
 
@@ -137,41 +173,368 @@ def visualize_edges(img, edges, neg_edges, coords, classes, path, class_idx_to_n
 '''
 '''
 
-train_annotation_path = [ #Filename, (xmin, xmax, ymin, ymax), path to annotation
-    #['N10_1_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_1_1_annotated.txt'],
-    ['N10_1_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_1_2_annotated.txt'],
-    #['N10_2_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_2_1_annotated.txt'],
-    ['N10_2_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_2_2_annotated.txt'],
-    #['N10_3_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_3_1_annotated.txt'],
-    ['N10_3_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_3_2_annotated.txt'],
-    #['N10_4_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_4_1_annotated.txt'],
-    ['N10_4_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_4_2_annotated.txt'],
-    ['N10_5_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_5_2_annotated.txt'],
-    ['N10_6_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_6_2_annotated.txt'],
-    #['N10_7_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_7_2_annotated.txt'],
-    ['N10_7_3', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_7_3_annotated.txt'],
-    #['N10_8_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_8_2_annotated.txt'],
-    ['N10_8_3', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_8_3_annotated.txt'],
-    ['P7_HE_Default_Extended_3_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_3_2.txt'],
-    ['P7_HE_Default_Extended_4_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_4_2.txt'],
-    #['P7_HE_Default_Extended_5_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_5_2.txt'],
-    ['P9_1_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_1_1_annotated.txt'],
-    ['P9_2_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_2_1_annotated.txt'],
-    ['P9_3_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_3_1_annotated.txt'],
-    ['P9_4_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_4_1_annotated.txt'],
-]
+# train_annotation_path = [ #Filename, (xmin, xmax, ymin, ymax), path to annotation
+#     #['N10_1_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_1_1_annotated.txt'],
+#     ['N10_1_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_1_2_annotated.txt'],
+#     #['N10_2_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_2_1_annotated.txt'],
+#     ['N10_2_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_2_2_annotated.txt'],
+#     #['N10_3_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_3_1_annotated.txt'],
+#     ['N10_3_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_3_2_annotated.txt'],
+#     #['N10_4_1', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_4_1_annotated.txt'],
+#     ['N10_4_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_4_2_annotated.txt'],
+#     ['N10_5_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_5_2_annotated.txt'],
+#     ['N10_6_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_6_2_annotated.txt'],
+#     #['N10_7_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_7_2_annotated.txt'],
+#     ['N10_7_3', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_7_3_annotated.txt'],
+#     #['N10_8_2', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_8_2_annotated.txt'],
+#     ['N10_8_3', (0, 2000, 0, 2000), 'datasets/annotations/N10_annotated/N10_8_3_annotated.txt'],
+#     ['P7_HE_Default_Extended_3_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_3_2.txt'],
+#     ['P7_HE_Default_Extended_4_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_4_2.txt'],
+#     #['P7_HE_Default_Extended_5_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_5_2.txt'],
+#     ['P9_1_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_1_1_annotated.txt'],
+#     ['P9_2_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_2_1_annotated.txt'],
+#     ['P9_3_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_3_1_annotated.txt'],
+#     ['P9_4_1', (0, 2000, 0, 2000), 'datasets/annotations/P9_annotated/P9_4_1_annotated.txt'],
+# ]
 
-val_annotation_path = [ #Filename, Coordinates, path to annotation
-    ['P7_HE_Default_Extended_1_1', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_1_1.txt'],
-    ['P7_HE_Default_Extended_2_1', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_2_1.txt'],
-    ['P7_HE_Default_Extended_2_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_2_2.txt'],
-    ['P7_HE_Default_Extended_3_1', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_3_1.txt'],
-]
+# val_annotation_path = [ #Filename, Coordinates, path to annotation
+#     ['P7_HE_Default_Extended_1_1', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_1_1.txt'],
+#     ['P7_HE_Default_Extended_2_1', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_2_1.txt'],
+#     ['P7_HE_Default_Extended_2_2', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_2_2.txt'],
+#     ['P7_HE_Default_Extended_3_1', (0, 2000, 0, 2000), 'datasets/annotations/P7_annotated/P7_HE_Default_Extended_3_1.txt'],
+# ]
 
-test_annotation_path = [ #Filename, Coordinates, path to annotation
-    ['P13_1_1', (0, 2000, 0, 2000), 'datasets/annotations/P13_annotated/P13_1_1_annotated.txt'],
-    #['P13_1_2', (0, 2000, 0, 2000), 'datasets/annotations/P13_annotated/P13_1_2_annotated.txt'],
-    ['P13_2_2', (0, 2000, 0, 2000), 'datasets/annotations/P13_annotated/P13_2_2_annotated.txt'],
+# test_annotation_path = [ #Filename, Coordinates, path to annotation
+#     ['P13_1_1', (0, 2000, 0, 2000), 'datasets/annotations/P13_annotated/P13_1_1_annotated.txt'],
+#     #['P13_1_2', (0, 2000, 0, 2000), 'datasets/annotations/P13_annotated/P13_1_2_annotated.txt'],
+#     ['P13_2_2', (0, 2000, 0, 2000), 'datasets/annotations/P13_annotated/P13_2_2_annotated.txt'],
+# ]
+
+# Reproduction of TOBIAS work -----------------------------------------------------------------------------------------
+# train_annotation_path = [
+#         #['N10_1_1', 'N10_1_1_edges.csv', 'N10_1_1_nodes.csv'],
+#         ['N10_1_2', 'N10_1_2_k6_edges.csv', 'N10_1_2_k6_nodes.csv'],
+#         #['N10_2_1', 'N10_2_1_edges.csv', 'N10_2_1_nodes.csv'],
+#         ['N10_2_2', 'N10_2_2_k6_edges.csv', 'N10_2_2_k6_nodes.csv'],
+#         #['N10_3_1', 'N10_3_1_edges.csv', 'N10_3_1_nodes.csv'],
+#         ['N10_3_2', 'N10_3_2_k6_edges.csv', 'N10_3_2_k6_nodes.csv'],
+#         #['N10_4_1', 'N10_4_1_edges.csv', 'N10_4_1_nodes.csv'],
+#         ['N10_4_2', 'N10_4_2_k6_edges.csv', 'N10_4_2_k6_nodes.csv'],
+#         ['N10_5_2', 'N10_5_2_k6_edges.csv', 'N10_5_2_k6_nodes.csv'],
+#         ['N10_6_2', 'N10_6_2_k6_edges.csv', 'N10_6_2_k6_nodes.csv'],
+#         #['N10_7_2', 'N10_7_2_edges.csv', 'N10_7_2_nodes.csv'],
+#         ['N10_7_3', 'N10_7_3_k6_edges.csv', 'N10_7_3_k6_nodes.csv'],
+#         #['N10_8_2', 'N10_8_2_edges.csv', 'N10_8_2_nodes.csv'],
+#         ['N10_8_3', 'N10_8_3_k6_edges.csv', 'N10_8_3_k6_nodes.csv'],
+#         ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_k6_edges.csv', 'P7_HE_Default_Extended_3_2_k6_nodes.csv'],
+#         ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_k6_edges.csv', 'P7_HE_Default_Extended_4_2_k6_nodes.csv'],
+#         #['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_edges.csv', 'P7_HE_Default_Extended_5_2_nodes.csv'],
+#         ['P9_1_1', 'P9_1_1_k6_edges.csv', 'P9_1_1_k6_nodes.csv'],
+#         ['P9_2_1', 'P9_2_1_k6_edges.csv', 'P9_2_1_k6_nodes.csv'],
+#         ['P9_3_1', 'P9_3_1_k6_edges.csv', 'P9_3_1_k6_nodes.csv'],
+#         ['P9_4_1', 'P9_4_1_k6_edges.csv', 'P9_4_1_k6_nodes.csv'],
+# ]
+#
+# val_annotation_path = [ #Filename, Coordinates, path to annotation
+#     ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_k6_edges.csv', 'P7_HE_Default_Extended_1_1_k6_nodes.csv'],
+#     ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_k6_edges.csv','P7_HE_Default_Extended_2_1_k6_nodes.csv'],
+#     ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_k6_edges.csv', 'P7_HE_Default_Extended_2_2_k6_nodes.csv'],
+#     ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_k6_edges.csv', 'P7_HE_Default_Extended_3_1_k6_nodes.csv'],
+# ]
+#
+# test_annotation_path = [ #Filename, Coordinates, path to annotation
+#     ['P13_1_1', 'P13_1_1_k6_edges.csv', 'P13_1_1_k6_nodes.csv'],
+#     # ['P13_1_2', 'P13_1_2_edges.csv', 'P13_1_2_nodes.csv'],
+#     ['P13_2_2', 'P13_2_2_k6_edges.csv', 'P13_2_2_k6_nodes.csv'],
+# ]
+# ---------------------------------------------------------------------------------------------------------------------
+
+# MINE ----------------------------------------------------------------------------------------------------------------
+
+# ORIGINAL Graphs no correction
+# train_annotation_path = [
+#     ['N10_1_1', 'N10_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_1_2', 'N10_1_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_1_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_2_1', 'N10_2_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_2_2', 'N10_2_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_2_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_3_2', 'N10_3_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_3_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_4_1', 'N10_4_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_4_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_4_2', 'N10_4_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_4_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_5_2', 'N10_5_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_5_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_6_2', 'N10_6_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_6_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_7_2', 'N10_7_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_7_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_7_3', 'N10_7_3_delaunay_edges_orig_forGraphSAGE.csv', 'N10_7_3_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_8_2', 'N10_8_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_8_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_8_3', 'N10_8_3_delaunay_edges_orig_forGraphSAGE.csv', 'N10_8_3_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_4_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     #['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_5_2_nodes_orig_forGraphSAGE.csv'],
+#     ['P9_1_1', 'P9_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P9_3_1', 'P9_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P20_6_1', 'P20_6_1_delaunay_edges_orig_forGraphSAGE.csv', 'P20_6_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P19_1_1', 'P19_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P19_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P19_3_2', 'P19_3_2_delaunay_edges_orig_forGraphSAGE.csv', 'P19_3_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+# ]
+# val_annotation_path = [
+#     ['P9_4_1', 'P9_4_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_4_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P19_2_1', 'P19_2_1_delaunay_edges_orig_forGraphSAGE.csv', 'P19_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_delaunay_edges_orig_forGraphSAGE.csv','P7_HE_Default_Extended_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#
+# ]
+# test_annotation_path = [
+#     ['P9_2_1', 'P9_2_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_2_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['N10_3_1', 'N10_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P20_5_1', 'P20_5_1_delaunay_edges_orig_forGraphSAGE.csv', 'P20_5_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P19_3_1', 'P19_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'P19_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     ['P13_1_1', 'P13_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P13_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+#     # ['P13_1_2', 'P13_1_2_edges_orig_forGraphSAGE.csv', 'P13_1_2_nodes_orig_forGraphSAGE.csv'],
+#     ['P13_2_2', 'P13_2_2_delaunay_edges_orig_forGraphSAGE.csv', 'P13_2_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+# ]
+
+# Corrected with heuristics
+
+# train_annotation_path = [
+#     ['N10_1_1', 'N10_1_1_delaunay_edges_heur_forGraphSAGE.csv', 'N10_1_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_1_2', 'N10_1_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_1_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_2_1', 'N10_2_1_delaunay_edges_heur_forGraphSAGE.csv', 'N10_2_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_2_2', 'N10_2_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_2_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_3_2', 'N10_3_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_3_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_4_1', 'N10_4_1_delaunay_edges_heur_forGraphSAGE.csv', 'N10_4_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_4_2', 'N10_4_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_4_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_5_2', 'N10_5_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_5_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_6_2', 'N10_6_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_6_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_7_2', 'N10_7_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_7_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_7_3', 'N10_7_3_delaunay_edges_heur_forGraphSAGE.csv', 'N10_7_3_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_8_2', 'N10_8_2_delaunay_edges_heur_forGraphSAGE.csv', 'N10_8_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_8_3', 'N10_8_3_delaunay_edges_heur_forGraphSAGE.csv', 'N10_8_3_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_delaunay_edges_heur_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_delaunay_edges_heur_forGraphSAGE.csv', 'P7_HE_Default_Extended_4_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     #['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_edges_heur_forGraphSAGE.csv', 'P7_HE_Default_Extended_5_2_nodes_heur_forGraphSAGE.csv'],
+#     ['P9_1_1', 'P9_1_1_delaunay_edges_heur_forGraphSAGE.csv', 'P9_1_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P9_3_1', 'P9_3_1_delaunay_edges_heur_forGraphSAGE.csv', 'P9_3_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P20_6_1', 'P20_6_1_delaunay_edges_heur_forGraphSAGE.csv', 'P20_6_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P19_1_1', 'P19_1_1_delaunay_edges_heur_forGraphSAGE.csv', 'P19_1_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P19_3_2', 'P19_3_2_delaunay_edges_heur_forGraphSAGE.csv', 'P19_3_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+# ]
+# val_annotation_path = [
+#     ['P9_4_1', 'P9_4_1_delaunay_edges_heur_forGraphSAGE.csv', 'P9_4_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P19_2_1', 'P19_2_1_delaunay_edges_heur_forGraphSAGE.csv', 'P19_2_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_delaunay_edges_heur_forGraphSAGE.csv', 'P7_HE_Default_Extended_1_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_delaunay_edges_heur_forGraphSAGE.csv','P7_HE_Default_Extended_2_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#
+# ]
+# test_annotation_path = [
+#     ['P9_2_1', 'P9_2_1_delaunay_edges_heur_forGraphSAGE.csv', 'P9_2_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_delaunay_edges_heur_forGraphSAGE.csv', 'P7_HE_Default_Extended_2_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_delaunay_edges_heur_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['N10_3_1', 'N10_3_1_delaunay_edges_heur_forGraphSAGE.csv', 'N10_3_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P20_5_1', 'P20_5_1_delaunay_edges_heur_forGraphSAGE.csv', 'P20_5_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P19_3_1', 'P19_3_1_delaunay_edges_heur_forGraphSAGE.csv', 'P19_3_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     ['P13_1_1', 'P13_1_1_delaunay_edges_heur_forGraphSAGE.csv', 'P13_1_1_delaunay_nodes_heur_forGraphSAGE.csv'],
+#     # ['P13_1_2', 'P13_1_2_edges_heur_forGraphSAGE.csv', 'P13_1_2_nodes_heur_forGraphSAGE.csv'],
+#     ['P13_2_2', 'P13_2_2_delaunay_edges_heur_forGraphSAGE.csv', 'P13_2_2_delaunay_nodes_heur_forGraphSAGE.csv'],
+# ]
+
+# Graph Corrected with GAT
+
+# train_annotation_path = [
+#     ['N10_1_1', 'N10_1_1_delaunay_edges_forGraphSAGE.csv', 'N10_1_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_1_2', 'N10_1_2_delaunay_edges_forGraphSAGE.csv', 'N10_1_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_2_1', 'N10_2_1_delaunay_edges_forGraphSAGE.csv', 'N10_2_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_2_2', 'N10_2_2_delaunay_edges_forGraphSAGE.csv', 'N10_2_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_3_2', 'N10_3_2_delaunay_edges_forGraphSAGE.csv', 'N10_3_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_4_1', 'N10_4_1_delaunay_edges_forGraphSAGE.csv', 'N10_4_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_4_2', 'N10_4_2_delaunay_edges_forGraphSAGE.csv', 'N10_4_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_5_2', 'N10_5_2_delaunay_edges_forGraphSAGE.csv', 'N10_5_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_6_2', 'N10_6_2_delaunay_edges_forGraphSAGE.csv', 'N10_6_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_7_2', 'N10_7_2_delaunay_edges_forGraphSAGE.csv', 'N10_7_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_7_3', 'N10_7_3_delaunay_edges_forGraphSAGE.csv', 'N10_7_3_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_8_2', 'N10_8_2_delaunay_edges_forGraphSAGE.csv', 'N10_8_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_8_3', 'N10_8_3_delaunay_edges_forGraphSAGE.csv', 'N10_8_3_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_delaunay_edges_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_delaunay_edges_forGraphSAGE.csv', 'P7_HE_Default_Extended_4_2_delaunay_nodes_forGraphSAGE.csv'],
+#     #['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_edges_forGraphSAGE.csv', 'P7_HE_Default_Extended_5_2_nodes_forGraphSAGE.csv'],
+#     ['P9_1_1', 'P9_1_1_delaunay_edges_forGraphSAGE.csv', 'P9_1_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P9_3_1', 'P9_3_1_delaunay_edges_forGraphSAGE.csv', 'P9_3_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P20_6_1', 'P20_6_1_delaunay_edges_forGraphSAGE.csv', 'P20_6_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P19_1_1', 'P19_1_1_delaunay_edges_forGraphSAGE.csv', 'P19_1_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P19_3_2', 'P19_3_2_delaunay_edges_forGraphSAGE.csv', 'P19_3_2_delaunay_nodes_forGraphSAGE.csv'],
+# ]
+# val_annotation_path = [
+#     ['P9_4_1', 'P9_4_1_delaunay_edges_forGraphSAGE.csv', 'P9_4_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P19_2_1', 'P19_2_1_delaunay_edges_forGraphSAGE.csv', 'P19_2_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_delaunay_edges_forGraphSAGE.csv', 'P7_HE_Default_Extended_1_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_delaunay_edges_forGraphSAGE.csv','P7_HE_Default_Extended_2_1_delaunay_nodes_forGraphSAGE.csv'],
+#
+# ]
+# test_annotation_path = [
+#     ['P9_2_1', 'P9_2_1_delaunay_edges_forGraphSAGE.csv', 'P9_2_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_delaunay_edges_forGraphSAGE.csv', 'P7_HE_Default_Extended_2_2_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_delaunay_edges_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['N10_3_1', 'N10_3_1_delaunay_edges_forGraphSAGE.csv', 'N10_3_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P20_5_1', 'P20_5_1_delaunay_edges_forGraphSAGE.csv', 'P20_5_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P19_3_1', 'P19_3_1_delaunay_edges_forGraphSAGE.csv', 'P19_3_1_delaunay_nodes_forGraphSAGE.csv'],
+#     ['P13_1_1', 'P13_1_1_delaunay_edges_forGraphSAGE.csv', 'P13_1_1_delaunay_nodes_forGraphSAGE.csv'],
+#     # ['P13_1_2', 'P13_1_2_edges_forGraphSAGE.csv', 'P13_1_2_nodes_forGraphSAGE.csv'],
+#     ['P13_2_2', 'P13_2_2_delaunay_edges_forGraphSAGE.csv', 'P13_2_2_delaunay_nodes_forGraphSAGE.csv'],
+# ]
+# --------------------------------------------------------------------------------------------------------------------------
+
+# new dataset split, Rachael.
+
+# GAT corrected
+# train_annotation_path = [
+#     ['P01_1_1', 'P01_1_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P01_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_1_1', 'N10_1_1_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_1_2', 'N10_1_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_1_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_2_1', 'N10_2_1_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_2_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_2_2', 'N10_2_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_2_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_3_1', 'N10_3_1_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_3_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_3_2', 'N10_3_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_3_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_4_1', 'N10_4_1_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_4_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P11_1_1', 'P11_1_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P11_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_3_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_4_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_5_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P9_1_1', 'P9_1_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P9_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P9_3_1', 'P9_3_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P9_3_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P20_6_1', 'P20_6_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P20_6_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P19_1_1', 'P19_1_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P19_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P19_3_2', 'P19_3_2_delaunay_GAT_forGraphSAGE_edges.csv', 'P19_3_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+# ]
+# val_annotation_path = [
+#     ['N10_4_2', 'N10_4_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_4_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_5_2', 'N10_5_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_5_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_6_2', 'N10_6_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_6_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P9_4_1', 'P9_4_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P9_4_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P19_2_1', 'P19_2_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P19_2_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_2_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+# ]
+# test_annotation_path = [
+#     ['P9_2_1', 'P9_2_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P9_2_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_2_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_delaunay_GAT_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_3_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P20_5_1', 'P20_5_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P20_5_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P19_3_1', 'P19_3_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P19_3_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P13_1_1', 'P13_1_1_delaunay_GAT_forGraphSAGE_edges.csv', 'P13_1_1_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     # ['P13_1_2', 'P13_1_2_GAT_forGraphSAGE_edges.csv', 'P13_1_2_GAT_forGraphSAGE_nodes.csv'],
+#     ['P13_2_2', 'P13_2_2_delaunay_GAT_forGraphSAGE_edges.csv', 'P13_2_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_7_2', 'N10_7_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_7_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_7_3', 'N10_7_3_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_7_3_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_8_2', 'N10_8_2_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_8_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['N10_8_3', 'N10_8_3_delaunay_GAT_forGraphSAGE_edges.csv', 'N10_8_3_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P11_1_2', 'P11_1_2_delaunay_GAT_forGraphSAGE_edges.csv', 'P11_1_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+#     ['P11_2_2', 'P11_2_2_delaunay_GAT_forGraphSAGE_edges.csv', 'P11_2_2_delaunay_GAT_forGraphSAGE_nodes.csv'],
+# ]
+
+# GA corrected
+# train_annotation_path = [
+#     ['P01_1_1', 'P01_1_1_delaunay_heur_forGraphSAGE_edges.csv', 'P01_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_1_1', 'N10_1_1_delaunay_heur_forGraphSAGE_edges.csv', 'N10_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_1_2', 'N10_1_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_1_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_2_1', 'N10_2_1_delaunay_heur_forGraphSAGE_edges.csv', 'N10_2_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_2_2', 'N10_2_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_2_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_3_1', 'N10_3_1_delaunay_heur_forGraphSAGE_edges.csv', 'N10_3_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_3_2', 'N10_3_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_3_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_4_1', 'N10_4_1_delaunay_heur_forGraphSAGE_edges.csv', 'N10_4_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P11_1_1', 'P11_1_1_delaunay_heur_forGraphSAGE_edges.csv', 'P11_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_delaunay_heur_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_delaunay_heur_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_3_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_delaunay_heur_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_4_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_delaunay_heur_forGraphSAGE_edges.csv',
+#      'P7_HE_Default_Extended_5_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P9_1_1', 'P9_1_1_delaunay_heur_forGraphSAGE_edges.csv', 'P9_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P9_3_1', 'P9_3_1_delaunay_heur_forGraphSAGE_edges.csv', 'P9_3_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P20_6_1', 'P20_6_1_delaunay_heur_forGraphSAGE_edges.csv', 'P20_6_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P19_1_1', 'P19_1_1_delaunay_heur_forGraphSAGE_edges.csv', 'P19_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P19_3_2', 'P19_3_2_delaunay_heur_forGraphSAGE_edges.csv', 'P19_3_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+# ]
+# val_annotation_path = [
+# # test_annotation_path = [
+#     ['N10_4_2', 'N10_4_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_4_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_5_2', 'N10_5_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_5_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_6_2', 'N10_6_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_6_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P9_4_1', 'P9_4_1_delaunay_heur_forGraphSAGE_edges.csv', 'P9_4_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P19_2_1', 'P19_2_1_delaunay_heur_forGraphSAGE_edges.csv', 'P19_2_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_delaunay_heur_forGraphSAGE_edges.csv','P7_HE_Default_Extended_2_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+# ]
+# # val_annotation_path = [
+# test_annotation_path = [
+#     ['P9_2_1', 'P9_2_1_delaunay_heur_forGraphSAGE_edges.csv', 'P9_2_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_delaunay_heur_forGraphSAGE_edges.csv', 'P7_HE_Default_Extended_2_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_delaunay_heur_forGraphSAGE_edges.csv', 'P7_HE_Default_Extended_3_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P20_5_1', 'P20_5_1_delaunay_heur_forGraphSAGE_edges.csv', 'P20_5_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P19_3_1', 'P19_3_1_delaunay_heur_forGraphSAGE_edges.csv', 'P19_3_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P13_1_1', 'P13_1_1_delaunay_heur_forGraphSAGE_edges.csv', 'P13_1_1_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     # ['P13_1_2', 'P13_1_2_heur_forGraphSAGE_edges.csv', 'P13_1_2_heur_forGraphSAGE_nodes.csv'],
+#     ['P13_2_2', 'P13_2_2_delaunay_heur_forGraphSAGE_edges.csv', 'P13_2_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_7_2', 'N10_7_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_7_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_7_3', 'N10_7_3_delaunay_heur_forGraphSAGE_edges.csv', 'N10_7_3_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_8_2', 'N10_8_2_delaunay_heur_forGraphSAGE_edges.csv', 'N10_8_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['N10_8_3', 'N10_8_3_delaunay_heur_forGraphSAGE_edges.csv', 'N10_8_3_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P11_1_2', 'P11_1_2_delaunay_heur_forGraphSAGE_edges.csv', 'P11_1_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+#     ['P11_2_2', 'P11_2_2_delaunay_heur_forGraphSAGE_edges.csv', 'P11_2_2_delaunay_heur_forGraphSAGE_nodes.csv'],
+# ]
+# ORIGINAL
+train_annotation_path = [
+    ['P01_1_1', 'P01_1_1_delaunay_orig_forGraphSAGE_edges.csv', 'P01_1_1_delaunay_orig_forGraphSAGE_nodes.csv'],
+    ['N10_1_1', 'N10_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_1_2', 'N10_1_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_1_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_2_1', 'N10_2_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_2_2', 'N10_2_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_2_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_3_1', 'N10_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_3_2', 'N10_3_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_3_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_4_1', 'N10_4_1_delaunay_edges_orig_forGraphSAGE.csv', 'N10_4_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P11_1_1', 'P11_1_1_delaunay_orig_forGraphSAGE_edges.csv', 'P11_1_1_delaunay_orig_forGraphSAGE_nodes.csv'],
+    ['P7_HE_Default_Extended_1_1', 'P7_HE_Default_Extended_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P7_HE_Default_Extended_3_2', 'P7_HE_Default_Extended_3_2_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P7_HE_Default_Extended_4_2', 'P7_HE_Default_Extended_4_2_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_4_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P7_HE_Default_Extended_5_2', 'P7_HE_Default_Extended_5_2_delaunay_orig_forGraphSAGE_edges.csv', 'P7_HE_Default_Extended_5_2_delaunay_orig_forGraphSAGE_nodes.csv'],
+    ['P9_1_1', 'P9_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P9_3_1', 'P9_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P20_6_1', 'P20_6_1_delaunay_edges_orig_forGraphSAGE.csv', 'P20_6_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P19_1_1', 'P19_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P19_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P19_3_2', 'P19_3_2_delaunay_edges_orig_forGraphSAGE.csv', 'P19_3_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+
+]
+val_annotation_path = [
+    ['N10_4_2', 'N10_4_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_4_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_5_2', 'N10_5_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_5_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_6_2', 'N10_6_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_6_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P9_4_1', 'P9_4_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_4_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P19_2_1', 'P19_2_1_delaunay_edges_orig_forGraphSAGE.csv', 'P19_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P7_HE_Default_Extended_2_1', 'P7_HE_Default_Extended_2_1_delaunay_edges_orig_forGraphSAGE.csv','P7_HE_Default_Extended_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+
+]
+test_annotation_path = [
+    ['P9_2_1', 'P9_2_1_delaunay_edges_orig_forGraphSAGE.csv', 'P9_2_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P7_HE_Default_Extended_2_2', 'P7_HE_Default_Extended_2_2_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_2_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P7_HE_Default_Extended_3_1', 'P7_HE_Default_Extended_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'P7_HE_Default_Extended_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P20_5_1', 'P20_5_1_delaunay_edges_orig_forGraphSAGE.csv', 'P20_5_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P19_3_1', 'P19_3_1_delaunay_edges_orig_forGraphSAGE.csv', 'P19_3_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P13_1_1', 'P13_1_1_delaunay_edges_orig_forGraphSAGE.csv', 'P13_1_1_delaunay_nodes_orig_forGraphSAGE.csv'],
+    # ['P13_1_2', 'P13_1_2_edges_orig_forGraphSAGE.csv', 'P13_1_2_nodes_orig_forGraphSAGE.csv'],
+    ['P13_2_2', 'P13_2_2_delaunay_edges_orig_forGraphSAGE.csv', 'P13_2_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_7_2', 'N10_7_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_7_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_7_3', 'N10_7_3_delaunay_edges_orig_forGraphSAGE.csv', 'N10_7_3_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_8_2', 'N10_8_2_delaunay_edges_orig_forGraphSAGE.csv', 'N10_8_2_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['N10_8_3', 'N10_8_3_delaunay_edges_orig_forGraphSAGE.csv', 'N10_8_3_delaunay_nodes_orig_forGraphSAGE.csv'],
+    ['P11_1_2', 'P11_1_2_delaunay_orig_forGraphSAGE_edges.csv', 'P11_1_2_delaunay_orig_forGraphSAGE_nodes.csv'],
+    ['P11_2_2', 'P11_2_2_delaunay_orig_forGraphSAGE_edges.csv', 'P11_2_2_delaunay_orig_forGraphSAGE_nodes.csv'],
 ]
 
 def get_agg_class(agg_class):
@@ -222,21 +585,25 @@ def get_dataset(args, setPath=None):
     if setPath == None:
         if mode == 'train':
             for path in train_annotation_path:
-                class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
-                dataset = class_attr(path, mode, num_layers)
+                # class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
+                class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset2')
+                dataset = class_attr(path, mode, num_layers, add_self_edges)
                 datasets.append(dataset)
         elif mode == 'val':
             for path in val_annotation_path:
-                class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
-                dataset = class_attr(path, mode, num_layers)
+                # class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
+                class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset2')
+                dataset = class_attr(path, mode, num_layers, add_self_edges)
                 datasets.append(dataset)
         elif mode == 'test':
             for path in test_annotation_path:
-                class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
-                dataset = class_attr(path, mode, num_layers)
+                # class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
+                class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset2')
+                dataset = class_attr(path, mode, num_layers, add_self_edges)
                 datasets.append(dataset)
     else:
-        class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
+        # class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset')
+        class_attr = getattr(importlib.import_module('datasets.link_prediction'), 'KIGraphDataset2')
         dataset = class_attr(setPath, mode, num_layers)
         datasets.append(dataset)
 
@@ -253,6 +620,7 @@ def get_fname(config):
     fname : str
         The filename for the saved model.
     """
+    model = config['model']
     agg_class = config['agg_class']
     hidden_dims_str = '_'.join([str(x) for x in config['hidden_dims']])
     num_samples = config['num_samples']
@@ -260,8 +628,8 @@ def get_fname(config):
     epochs = config['epochs']
     lr = config['lr']
     weight_decay = config['weight_decay']
-    fname = 'graphsage_agg_class_{}_hidden_dims_{}_num_samples_{}_batch_size_{}_epochs_{}_lr_{}_weight_decay_{}.pth'.format(
-        agg_class, hidden_dims_str, num_samples, batch_size, epochs, lr,
+    fname = '{}_agg_class_{}_hidden_dims_{}_num_samples_{}_batch_size_{}_epochs_{}_lr_{}_weight_decay_{}.pth'.format(
+        model, agg_class, hidden_dims_str, num_samples, batch_size, epochs, lr,
         weight_decay)
 
     return fname

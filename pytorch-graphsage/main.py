@@ -219,6 +219,9 @@ def main():
         for i in range(len(datasets)):
             num_batches = int(ceil(len(datasets[i]) / config['batch_size']))
             total_batches += num_batches
+            # Added by Jorge
+            edge_pred, neg_pred, classes, coords = [], [], None, None
+            # --------------
             with torch.no_grad():
                 for (idx, batch) in enumerate(loaders[i]):
                     edges, features, node_layers, mappings, rows, labels, dist = batch
@@ -231,6 +234,20 @@ def main():
                     running_loss += loss.item()
                     total_loss += loss.item()
                     predictions = (scores >= t).long()
+
+                    # added by Jorge
+                    preds = edges[torch.nonzero(predictions).detach().cpu().numpy(), :]
+                    neg_preds = edges[(predictions == 0).nonzero(), :]
+
+                    if len(preds) > 0:
+                        for pred in preds:
+                            edge_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+
+                    if len(neg_preds) > 0:
+                        for pred in neg_preds:
+                            neg_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+                    # ---------------
+
                     num_correct += torch.sum(predictions == labels.long()).item()
                     total_correct += torch.sum(predictions == labels.long()).item()
                     num_examples += len(labels)
@@ -250,6 +267,10 @@ def main():
                         num_correct, num_examples = 0, 0
                 running_loss = 0.0
                 num_correct, num_examples = 0, 0
+
+                # export as json for visualization in IntelliGraph JORGE
+                utils.export_prediction_as_json(datasets[i].path[0], 'val', edge_pred, neg_pred)
+
         total_loss /= total_batches
         total_accuracy = total_correct / total_examples
         print('Loss {:.4f}, accuracy {:.4f}'.format(total_loss, total_accuracy))
@@ -279,6 +300,9 @@ def main():
         for i in range(len(datasets)):
             num_batches = int(ceil(len(datasets[i]) / config['batch_size']))
             total_batches += num_batches
+            # Added by Jorge
+            edge_pred, neg_pred, classes, coords = [], [], None, None
+            # --------------
             for (idx, batch) in enumerate(loaders[i]):
                 edges, features, node_layers, mappings, rows, labels, dist = batch
                 features, labels = features.to(device), labels.to(device)
@@ -290,6 +314,20 @@ def main():
                 running_loss += loss.item()
                 total_loss += loss.item()
                 predictions = (scores >= t).long()
+
+                # added by Jorge
+                preds = edges[torch.nonzero(predictions).detach().cpu().numpy(), :]
+                neg_preds = edges[(predictions == 0).nonzero(), :]
+
+                if len(preds) > 0:
+                    for pred in preds:
+                        edge_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+
+                if len(neg_preds) > 0:
+                    for pred in neg_preds:
+                        neg_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+                # ---------------
+
                 num_correct += torch.sum(predictions == labels.long()).item()
                 total_correct += torch.sum(predictions == labels.long()).item()
                 num_examples += len(labels)
@@ -310,6 +348,10 @@ def main():
 
             running_loss = 0.0
             num_correct, num_examples = 0, 0
+
+            # export as json for visualization in IntelliGraph JORGE
+            utils.export_prediction_as_json(datasets[i].path[0], 'test1', edge_pred, neg_pred)
+
         total_loss /= total_batches
         total_accuracy = total_correct / total_examples
         print('Loss {:.4f}, accuracy {:.4f}'.format(total_loss, total_accuracy))
@@ -339,6 +381,10 @@ def main():
         for i in range(len(datasets)):
             num_batches = int(ceil(len(datasets[i]) / config['batch_size']))
             total_batches += num_batches
+            # Added by Jorge
+            edge_pred, neg_pred = [], []
+            # --------------
+
             for (idx, batch) in enumerate(loaders[i]):
                 edges, features, node_layers, mappings, rows, labels, dist = batch
                 features, labels = features.to(device), labels.to(device)
@@ -350,6 +396,32 @@ def main():
                 running_loss += loss.item()
                 total_loss += loss.item()
                 predictions = (scores >= t).long()
+
+                # added by Jorge
+                preds = edges[torch.nonzero(predictions).detach().cpu().numpy(), :]
+                neg_preds = edges[(predictions == 0).nonzero(), :]
+
+                # print('preds:', preds)
+                # print('neg_preds:', neg_preds)
+                # print('node_layers:', node_layers)
+
+                if len(preds) > 0:
+                    for pred in preds:
+                        edge_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+
+                # if len(neg_preds) > 0:
+                #     for pred in neg_preds:
+                #         neg_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+                        # if isinstance(pred, list):
+                        #     if isinstance(pred[0], list):
+                        #         neg_pred.append([node_layers[-1][pred[0][0]], node_layers[-1][pred[0][1]]])
+                        #     else:
+                        #         print('found conflict')
+                        #         neg_pred.append([pred[0], pred[1]])
+                        # else:
+                        #     print('neg_pred is not a list')
+                # ---------------
+
                 num_correct += torch.sum(predictions == labels.long()).item()
                 total_correct += torch.sum(predictions == labels.long()).item()
                 num_examples += len(labels)
@@ -370,6 +442,11 @@ def main():
 
             running_loss = 0.0
             num_correct, num_examples = 0, 0
+
+            # export as json for visualization in IntelliGraph JORGE
+            utils.export_prediction_as_json(datasets[i].path[0], 'test2', edge_pred, neg_pred)
+
+
         total_loss /= total_batches
         total_accuracy = total_correct / total_examples
         print('Loss {:.4f}, accuracy {:.4f}'.format(total_loss, total_accuracy))
