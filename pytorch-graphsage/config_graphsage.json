@@ -1,0 +1,19 @@
+{
+    "dataset_path": [
+        "P9_1_1", [0, 2000, 0, 2000], "2021-4-5_19_44_P9_1_1_edges_intelligraph_idx", "datasets/images/P9/P9_1_1.tif"
+    ],
+    "stats_per_batch" : 5,
+    "mode" : "train",
+    "task" : "link_prediction",
+    "agg_class" : "MaxPoolAggregator",
+    "cuda" : "False",
+    "hidden_dims" : [64],
+    "num_samples" : [10, 10],
+    "batch_size" : 32,
+    "epochs" : 30,
+    "lr" : 1e-3,
+    "weight_decay" : 1e-4,
+    "threshold":  0.72,
+    "dropout": 0.3,
+    "model" : "graphsage"
+}
